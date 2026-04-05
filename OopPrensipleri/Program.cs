@@ -5,12 +5,9 @@ islem.UyeAd = "Ali Şahin";
 
 islem.EkranaYazdir();
 
-
 class Kitap
 {
     public string KitapAd;
-
-    // virtual metot tanımlanıyor
     public virtual void EkranaYazdir()
     {
         Console.WriteLine("Kitap Adı: " + KitapAd);
