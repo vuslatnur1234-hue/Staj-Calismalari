@@ -1,28 +1,32 @@
-﻿OduncIslemi islem = new OduncIslemi();
+OduncIslemi islem = new OduncIslemi();
 
 islem.KitapAd = "Fahrenheit";
 islem.UyeAd = "Ali Şahin";
 
 islem.EkranaYazdir();
 
-// Kalıtım
-// OduncIslemi sınıfı Kitap sınıfından miras alıyor. KitapAd ve EkranaYazdir metodunu kullanabiliyor.
+
 class Kitap
 {
     public string KitapAd;
 
+    // virtual metot tanımlanıyor
     public virtual void EkranaYazdir()
     {
         Console.WriteLine("Kitap Adı: " + KitapAd);
     }
 }
-// Çok biçimlilik 
-// Kitap sınıfındaki virtual metod OduncIslemi sınıfında override edildi. 
-// Böylece aynı metod farklı davranış sergileyebiliyor.
+
+// 1. Kalıtım
+// OduncIslemi sınıfı Kitap sınıfından miras alıyor : Kitap
+// KitapAd değişkenini baştan yazmadan kullanabiliyor
 class OduncIslemi : Kitap
 {
     public string UyeAd;
 
+    // 2. Çok Biçimlilik 
+    // Kitap sınıfındaki virtual metod burada override edilerek ezildi 
+    // Aynı metod farklı davranış sergileyebiliyor
     public override void EkranaYazdir()
     {
         Console.WriteLine(UyeAd + " adlı üye " + KitapAd + " kitabını ödünç aldı.");
