@@ -35,6 +35,11 @@ Console.ReadKey();*/
 
 /*...........................................................................*/
 
+// Test
+var testIscisi = new DbServiceApp.SqlLogger();
+testIscisi.LogYaz("success", "test islemi", "çalışıyor");
+Console.WriteLine("test logu sql'e gönderildi");
+
 //13.04.2026 Geliştirilmiş vers.
 string secim = "";
 Console.WriteLine("\nKÜTÜPHANE YÖNETİM SİSTEMİ v2.0 ");
@@ -133,3 +138,4 @@ while (secim != "0")
         Console.Clear();
     }
 }
+
