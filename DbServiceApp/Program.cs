@@ -4,10 +4,12 @@ using System;
 
 // Servis kaydı
 var servisler = new ServiceCollection()
-    .AddSingleton<IDBManager, DBManager>()
+    .AddSingleton<ILoggerService, SqlLogger>() 
+    .AddSingleton<IDBManager, DBManager>()     
     .BuildServiceProvider();
 
 var db = servisler.GetService<IDBManager>();
+
 /* 10.04.2026
 Console.WriteLine("--- KÜTÜPHANE OTOMASYONU ---");
 
