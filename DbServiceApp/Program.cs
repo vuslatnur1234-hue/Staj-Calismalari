@@ -1,14 +1,23 @@
 ﻿using DbServiceApp;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting; 
+using Microsoft.Extensions.Logging;
 using System;
+using System.Threading.Tasks;
 
-// Servis kaydı
-var servisler = new ServiceCollection()
-    .AddSingleton<ILoggerService, SqlLogger>() 
-    .AddSingleton<IDBManager, DBManager>()     
-    .BuildServiceProvider();
+var builder = Host.CreateApplicationBuilder(args);
+builder.Logging.ClearProviders();
 
-var db = servisler.GetService<IDBManager>();
+// Servisler
+builder.Services.AddSingleton<ILoggerService, SqlLogger>();
+builder.Services.AddTransient<IDBManager, DBManager>();
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService<LibraryBackgroundService>();
+var host = builder.Build();
+
+_ = host.StartAsync();
+
+var db = host.Services.GetRequiredService<IDBManager>();
 
 /* 10.04.2026
 Console.WriteLine("--- KÜTÜPHANE OTOMASYONU ---");
@@ -140,4 +149,3 @@ while (secim != "0")
         Console.Clear();
     }
 }
-
