@@ -25,6 +25,7 @@ namespace DbServiceApp
                     komut.ExecuteNonQuery();
                 }
             }
+            Console.WriteLine($"SİSTEM LOGU: {durum} - {mesaj}");
         }
     }
 }

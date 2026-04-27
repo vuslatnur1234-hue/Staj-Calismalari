@@ -1,23 +1,38 @@
 ﻿using DbServiceApp;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting; 
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Logging.ClearProviders();
+try
+{
+    var builder = Host.CreateApplicationBuilder(args);
+    builder.Logging.ClearProviders();
 
-// Servisler
-builder.Services.AddSingleton<ILoggerService, SqlLogger>();
-builder.Services.AddTransient<IDBManager, DBManager>();
-builder.Services.AddHttpClient();
-builder.Services.AddHostedService<LibraryBackgroundService>();
-var host = builder.Build();
+    // Servisler
+    builder.Services.AddSingleton<ILoggerService, SqlLogger>();
+    builder.Services.AddTransient<IDBManager, DBManager>();
+    builder.Services.AddHttpClient();
+    builder.Services.AddHostedService<LibraryBackgroundService>();
 
-_ = host.StartAsync();
+    var host = builder.Build();
 
-var db = host.Services.GetRequiredService<IDBManager>();
+    await host.StartAsync();
+
+    // Veritabanı yöneticisini host üzerinden almak için
+    var db = host.Services.GetRequiredService<IDBManager>();
+
+    Console.WriteLine("Sistem İzleme Modu Aktif: Arka plan servisi çalışıyor...");
+    Console.WriteLine("Kapatmak için klavyeden Enter'a basın.\n");
+    Console.ReadLine();
+    await host.StopAsync();
+}
+catch (Exception ex)
+{
+    Console.WriteLine("Sistem Başlatılamadı. Kritik Hata: " + ex.Message);
+    Console.ReadLine();
+}
 
 /* 10.04.2026
 Console.WriteLine("--- KÜTÜPHANE OTOMASYONU ---");
@@ -44,7 +59,7 @@ db.CloseConnection();
 Console.WriteLine("\nBütün işlemler bitti. Çıkmak için bir tuşa basın.");
 Console.ReadKey();*/
 
-/*...........................................................................*/
+/*...........................................................................
 
 // Test
 var testIscisi = new DbServiceApp.SqlLogger();
@@ -148,4 +163,4 @@ while (secim != "0")
         Console.ReadKey();
         Console.Clear();
     }
-}
+}*/
