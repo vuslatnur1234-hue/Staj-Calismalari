@@ -1,25 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
-using System.Data;
+using Microsoft.Extensions.Configuration;
 
 namespace DbServiceApp
 {
     public class DBManager : IDBManager
     {
         private readonly ILoggerService _logger;
-        private string baglantiAdresi = @"Server=.\SQLEXPRESS;Database=Kutuphane;User Id=sa;Password=1;Encrypt=False;TrustServerCertificate=True;";
+        private readonly string _baglantiAdresi;
         private SqlConnection baglanti;
-        public DBManager(ILoggerService logger)
+
+        public DBManager(ILoggerService logger, IConfiguration configuration)
         {
             _logger = logger;
+            _baglantiAdresi = configuration.GetConnectionString("DefaultConnection");
         }
         public void OpenConnection()
         {
-            baglanti = new SqlConnection(baglantiAdresi);
+            baglanti = new SqlConnection(_baglantiAdresi);
             baglanti.Open();
             Console.WriteLine("Bağlantı açıldı.");
         }

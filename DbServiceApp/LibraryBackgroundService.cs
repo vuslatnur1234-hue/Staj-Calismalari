@@ -22,7 +22,7 @@ namespace DbServiceApp
             _httpClient = httpClient;
         }
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken) 
         {
             _logger.LogYaz("SUCCESS", "System", "Arka plan servisi aktif edildi.");
 
