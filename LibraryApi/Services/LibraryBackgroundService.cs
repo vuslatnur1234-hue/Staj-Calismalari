@@ -36,15 +36,11 @@ namespace LibraryApi.Services
             {
                 try
                 {
-                    // API'DEN RASTGELE KİTAP ÇEK
-                    // Her seferinde 0 ile 40 arasındaki rastgele bir sıradan başlayan 3 kitabı çek
                     Random rnd = new Random();
                     int rastgeleSira = rnd.Next(0, 40);
 
-                    // AppSettings'den anahtarı güvenli bir şekilde çekiyoruz
                     string apiKey = _configuration["GoogleBooksApi:ApiKey"];
 
-                    // URL'in sonuna anahtarı ekleyerek Google'a kimliğimizi bildiriyoruz
                     string apiUrl = $"https://www.googleapis.com/books/v1/volumes?q={rastgeleSira}&maxResults=3&startIndex={rastgeleSira}&key={apiKey}";
 
                     var response = await _httpClient.GetStringAsync(apiUrl, stoppingToken);
