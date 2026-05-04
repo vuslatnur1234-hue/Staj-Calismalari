@@ -69,7 +69,6 @@ namespace LibraryApi.Services
                                 string yId = $"(SELECT TOP 1 YazarID FROM Yazarlar WHERE YazarAd = '{yazarAd}')";
                                 string tId = $"(SELECT TOP 1 TurID FROM Turler WHERE TurAd = '{turAd}')";
 
-                                // SQL: "bu KitapAd veritabanında var mı? YOKSA (NOT EXISTS)"
                                 string sorguEkle = $@"
                         IF NOT EXISTS (SELECT 1 FROM Kitaplar WHERE KitapAd = '{kitapAd}')
                         BEGIN
@@ -82,7 +81,7 @@ namespace LibraryApi.Services
                             }
                             catch (Exception)
                             {
-                                // Hata olursa es geç
+                               
                             }
                         }
                         db.CloseConnection();
