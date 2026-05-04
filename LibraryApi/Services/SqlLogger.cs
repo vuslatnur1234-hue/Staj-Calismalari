@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using System;
 
-namespace DbServiceApp
+namespace LibraryApi.Services
 {
     public class SqlLogger : ILoggerService
     {

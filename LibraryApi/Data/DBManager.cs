@@ -1,8 +1,10 @@
-﻿using System;
+﻿using LibraryApi.Services;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
+using System;
+using System.Data;
 
-namespace DbServiceApp
+namespace LibraryApi.Data
 {
     public class DBManager : IDBManager
     {
@@ -47,33 +49,25 @@ namespace DbServiceApp
             {
                 // Hata durumunda loglama
                 _logger.LogYaz("FAIL", "ExecuteNonQuery", $"Hata Oluştu: {ex.Message} | Sorgu: {query}");
-                throw; 
+                throw;
             }
         }
 
-        public void ReadData(string query)
+        public DataTable ReadData(string query)
         {
             try
             {
                 SqlCommand komut = new SqlCommand(query, baglanti);
                 SqlDataReader oku = komut.ExecuteReader();
 
-                Console.WriteLine("Veriler Getiriliyor...");
+                DataTable tablo = new DataTable();
+                tablo.Load(oku); 
 
-                int kayitSayisi = 0;
-                while (oku.Read())
-                {
-                    Console.WriteLine("ID: " + oku[0] + " - Kitap Adı: " + oku[1]);
-                    kayitSayisi++;
-                }
                 oku.Close();
-
-                // Veri okuma başarılı log 
-                _logger.LogYaz("SUCCESS", "ReadData", $"Veri okuma başarılı. Toplam {kayitSayisi} kayıt getirildi.");
+                return tablo; 
             }
             catch (Exception ex)
             {
-                // Veri okuma hatası log
                 _logger.LogYaz("FAIL", "ReadData", $"Hata: {ex.Message}");
                 throw;
             }

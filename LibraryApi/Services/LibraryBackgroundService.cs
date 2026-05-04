@@ -1,25 +1,31 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Configuration;
+using LibraryApi.Data;
+using LibraryApi.DTOs;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
+using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 
-namespace DbServiceApp
+namespace LibraryApi.Services
 {
     public class LibraryBackgroundService : BackgroundService
     {
         private readonly ILoggerService _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly HttpClient _httpClient;
+        private readonly IConfiguration _configuration;
 
-        public LibraryBackgroundService(ILoggerService logger, IServiceProvider serviceProvider, HttpClient httpClient)
+        public LibraryBackgroundService(ILoggerService logger, IServiceProvider serviceProvider, HttpClient httpClient, IConfiguration configuration)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
             _httpClient = httpClient;
+            _configuration = configuration;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken) 
@@ -35,7 +41,12 @@ namespace DbServiceApp
                     Random rnd = new Random();
                     int rastgeleSira = rnd.Next(0, 40);
 
-                    string apiUrl = $"https://www.googleapis.com/books/v1/volumes?q=subject:computers&maxResults=3&startIndex={rastgeleSira}";
+                    // AppSettings'den anahtarı güvenli bir şekilde çekiyoruz
+                    string apiKey = _configuration["GoogleBooksApi:ApiKey"];
+
+                    // URL'in sonuna anahtarı ekleyerek Google'a kimliğimizi bildiriyoruz
+                    string apiUrl = $"https://www.googleapis.com/books/v1/volumes?q={rastgeleSira}&maxResults=3&startIndex={rastgeleSira}&key={apiKey}";
+
                     var response = await _httpClient.GetStringAsync(apiUrl, stoppingToken);
                     var apiData = JsonSerializer.Deserialize<GoogleBooksResponse>(response);
 
@@ -87,11 +98,11 @@ namespace DbServiceApp
                 }
 
                 //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }
 
             //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
         }
     }
 }

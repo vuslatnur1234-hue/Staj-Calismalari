@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DbServiceApp
+namespace LibraryApi.Services
 {
     public interface ILoggerService
     {
