@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Data.SqlClient;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -11,7 +12,7 @@ namespace LibraryApi.Data
     {
         void OpenConnection();
         void CloseConnection();
-        void ExecuteNonQuery(string query);
-        DataTable ReadData(string query);
+        void ExecuteNonQuery(string query, SqlParameter[] parameters = null);
+        DataTable ReadData(string query, SqlParameter[] parameters = null);
     }
 }

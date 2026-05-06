@@ -1,6 +1,6 @@
-﻿using LibraryApi.Data;
+﻿using LibraryApi.DTOs;
+using LibraryApi.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 
 namespace LibraryApi.Controllers
 {
@@ -8,38 +8,67 @@ namespace LibraryApi.Controllers
     [ApiController]
     public class BooksController : ControllerBase
     {
-        private readonly IDBManager _db;
+        private readonly IBookRepository _bookRepository;
 
-        public BooksController(IDBManager db)
+        public BooksController(IBookRepository bookRepository)
         {
-            _db = db;
+            _bookRepository = bookRepository;
         }
 
-        // Listele- GET
         [HttpGet]
         public IActionResult GetBooks()
         {
             try
             {
-                _db.OpenConnection();
-                string sorguListele = @"
-            SELECT k.KitapID, k.KitapAd, y.YazarAd, t.TurAd, k.RafNo
-            FROM Kitaplar k
-            INNER JOIN Yazarlar y ON k.YazarID = y.YazarID
-            INNER JOIN Turler t ON k.TurID = t.TurID";
-
-                DataTable veri = _db.ReadData(sorguListele);
-
-                return Ok(veri);
+                var kitaplar = _bookRepository.GetAll();
+                return Ok(kitaplar);
             }
             catch (System.Exception ex)
             {
                 return StatusCode(500, ex.Message);
             }
-            finally
+        }
+
+        [HttpPost]
+        public IActionResult AddBook([FromBody] BookRequestDto yeniKitap)
+        {
+            try
             {
-                _db.CloseConnection();
+                _bookRepository.Add(yeniKitap);
+                return Ok("Kitap başarıyla eklendi.");
             }
-        } 
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateBook(int id, [FromBody] BookRequestDto guncelKitap)
+        {
+            try
+            {
+                _bookRepository.Update(id, guncelKitap);
+                return Ok($"{id} numaralı kitap güncellendi.");
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteBook(int id)
+        {
+            try
+            {
+                _bookRepository.Delete(id);
+                return Ok($"{id} numaralı kitap sistemden silindi.");
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }

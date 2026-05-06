@@ -1,4 +1,5 @@
 ﻿using LibraryApi.Data;
+using LibraryApi.Repositories;
 using LibraryApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -11,13 +12,11 @@ try
     var builder = WebApplication.CreateBuilder(args);
     builder.Logging.ClearProviders();
 
-    // Servisler
     builder.Services.AddSingleton<ILoggerService, SqlLogger>();
     builder.Services.AddTransient<IDBManager, DBManager>();
+    builder.Services.AddTransient<IBookRepository, BookRepository>(); 
     builder.Services.AddHttpClient();
     builder.Services.AddHostedService<LibraryBackgroundService>();
-
-    // Web API 
     builder.Services.AddControllers().AddNewtonsoftJson(); 
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(); 
@@ -41,6 +40,60 @@ catch (Exception ex)
 {
     Console.WriteLine(ex.Message);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*

@@ -17,6 +17,7 @@ namespace LibraryApi.Data
             _logger = logger;
             _baglantiAdresi = configuration.GetConnectionString("DefaultConnection");
         }
+
         public void OpenConnection()
         {
             baglanti = new SqlConnection(_baglantiAdresi);
@@ -32,12 +33,15 @@ namespace LibraryApi.Data
                 Console.WriteLine("Bağlantı kapatıldı.");
             }
         }
-
-        public void ExecuteNonQuery(string query)
+        public void ExecuteNonQuery(string query, SqlParameter[] parameters = null)
         {
             try
             {
                 SqlCommand komut = new SqlCommand(query, baglanti);
+
+                if (parameters != null)
+                    komut.Parameters.AddRange(parameters);
+
                 int sonuc = komut.ExecuteNonQuery();
 
                 // Başarılı işlem logu
@@ -52,19 +56,22 @@ namespace LibraryApi.Data
                 throw;
             }
         }
-
-        public DataTable ReadData(string query)
+        public DataTable ReadData(string query, SqlParameter[] parameters = null)
         {
             try
             {
                 SqlCommand komut = new SqlCommand(query, baglanti);
+
+                if (parameters != null)
+                    komut.Parameters.AddRange(parameters);
+
                 SqlDataReader oku = komut.ExecuteReader();
 
                 DataTable tablo = new DataTable();
-                tablo.Load(oku); 
+                tablo.Load(oku);
 
                 oku.Close();
-                return tablo; 
+                return tablo;
             }
             catch (Exception ex)
             {
