@@ -39,7 +39,7 @@ try
 
     var db = app.Services.GetRequiredService<IDBManager>();
 
-    // if (app.Environment.IsDevelopment()) // Bu satırı yorum satırı yap
+    // if (app.Environment.IsDevelopment()) 
     // {
     app.UseSwagger();
     app.UseSwaggerUI();
