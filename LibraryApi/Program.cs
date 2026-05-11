@@ -1,5 +1,6 @@
 ﻿using LibraryApi.Data;
 using LibraryApi.Repositories;
+using LibraryApi.Repositories.Interfaces;
 using LibraryApi.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

@@ -92,12 +92,10 @@ namespace LibraryApi.Services
                     _logger.LogYaz("FAIL", "Auto-Sync", "Hata: " + ex.Message);
                 }
 
-                //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
 
-            //await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
         }
     }
 }

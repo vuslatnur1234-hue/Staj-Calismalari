@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Dashboard - Kütüphane</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="logo-icon">📚</span>
+            <div><div class="logo-title">Bibliotheca</div><div class="logo-sub">Yönetim Sistemi</div></div>
+        </div>
+        <nav class="nav">
+            <a href="index.html" class="nav-item active"><span class="nav-icon">◈</span> Dashboard</a>
+            <a href="books.html" class="nav-item"><span class="nav-icon">◉</span> Kitaplar</a>
+            <a href="members.html" class="nav-item"><span class="nav-icon">◎</span> Üyeler</a>
+            <a href="loans.html" class="nav-item"><span class="nav-icon">◐</span> Ödünç İşlemleri</a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <header class="topbar">
+            <div class="page-title">Dashboard</div>
+            <div class="topbar-right">
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-icon">📖</div><div class="stat-val" id="stat-books">—</div><div class="stat-label">Toplam Kitap</div></div>
+                <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-val" id="stat-members">—</div><div class="stat-label">Toplam Üye</div></div>
+                <div class="stat-card"><div class="stat-icon">🔖</div><div class="stat-val" id="stat-loans">—</div><div class="stat-label">Aktif Ödünç</div></div>
+                <div class="stat-card"><div class="stat-icon">✓</div><div class="stat-val" id="stat-returned">—</div><div class="stat-label">Teslim Edilen</div></div>
+            </div>
+
+            <div class="dash-grid">
+                <div class="panel">
+                    <div class="panel-header">Son Eklenen Kitaplar</div>
+                    <div id="recentBooks" class="mini-list">Yükleniyor...</div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">Son Ödünç İşlemleri</div>
+                    <div id="recentLoans" class="mini-list">Yükleniyor...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 ﻿using LibraryApi.Data;
 using LibraryApi.DTOs;
+using LibraryApi.Repositories.Interfaces;
 using Microsoft.Data.SqlClient;
 using System.Collections.Generic;
 using System.Data;
@@ -87,6 +88,65 @@ namespace LibraryApi.Repositories
             };
 
             _db.ExecuteNonQuery(sorgu, parametreler);
+            _db.CloseConnection();
+        }
+
+        public UyeDto GetById(int id)
+        {
+            _db.OpenConnection();
+            string sorgu = "SELECT UyeID, Ad, Soyad, Telefon, Email, KayitTarihi FROM Uyeler WHERE UyeID = @UyeID";
+
+            SqlParameter[] parametreler = {
+        new SqlParameter("@UyeID", id)
+    };
+
+            DataTable veri = _db.ReadData(sorgu, parametreler);
+            _db.CloseConnection();
+
+            if (veri.Rows.Count == 0) return null;
+
+            DataRow satir = veri.Rows[0];
+            return new UyeDto
+            {
+                UyeID = (int)satir["UyeID"],
+                Ad = satir["Ad"].ToString(),
+                Soyad = satir["Soyad"].ToString(),
+                Telefon = satir["Telefon"].ToString(),
+                Email = satir["Email"].ToString(),
+                KayitTarihi = satir["KayitTarihi"].ToString()
+            };
+        }
+
+        public void Patch(int id, UyeRequestDto dto)
+        {
+            _db.OpenConnection();
+            var satirlar = new List<string>();
+            var parametreler = new List<SqlParameter>();
+
+            if (dto.Ad != null)
+            {
+                satirlar.Add("Ad = @Ad");
+                parametreler.Add(new SqlParameter("@Ad", dto.Ad));
+            }
+            if (dto.Soyad != null)
+            {
+                satirlar.Add("Soyad = @Soyad");
+                parametreler.Add(new SqlParameter("@Soyad", dto.Soyad));
+            }
+            if (dto.Telefon != null)
+            {
+                satirlar.Add("Telefon = @Telefon");
+                parametreler.Add(new SqlParameter("@Telefon", dto.Telefon));
+            }
+            if (dto.Email != null)
+            {
+                satirlar.Add("Email = @Email");
+                parametreler.Add(new SqlParameter("@Email", dto.Email));
+            }
+
+            parametreler.Add(new SqlParameter("@UyeID", id));
+            string sorgu = $"UPDATE Uyeler SET {string.Join(", ", satirlar)} WHERE UyeID = @UyeID";
+            _db.ExecuteNonQuery(sorgu, parametreler.ToArray());
             _db.CloseConnection();
         }
     }

@@ -1,5 +1,5 @@
 ﻿using LibraryApi.DTOs;
-using LibraryApi.Repositories;
+using LibraryApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryApi.Controllers
@@ -64,6 +64,35 @@ namespace LibraryApi.Controllers
             {
                 _bookRepository.Delete(id);
                 return Ok($"{id} numaralı kitap sistemden silindi.");
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PatchBook(int id, [FromBody] BookRequestDto guncelKitap)
+        {
+            try
+            {
+                _bookRepository.Patch(id, guncelKitap);
+                return Ok($"{id} numaralı kitap kısmen güncellendi.");
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetBook(int id)
+        {
+            try
+            {
+                var kitap = _bookRepository.GetById(id);
+                if (kitap == null) return NotFound($"{id} numaralı kitap bulunamadı.");
+                return Ok(kitap);
             }
             catch (System.Exception ex)
             {

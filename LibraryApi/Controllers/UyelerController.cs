@@ -1,5 +1,5 @@
 ﻿using LibraryApi.DTOs;
-using LibraryApi.Repositories;
+using LibraryApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryApi.Controllers
@@ -64,6 +64,35 @@ namespace LibraryApi.Controllers
             {
                 _uyeRepository.Delete(id);
                 return Ok($"{id} numaralı üye sistemden silindi.");
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetUye(int id)
+        {
+            try
+            {
+                var uye = _uyeRepository.GetById(id);
+                if (uye == null) return NotFound($"{id} numaralı üye bulunamadı.");
+                return Ok(uye);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpPatch("{id}")]
+        public IActionResult PatchUye(int id, [FromBody] UyeRequestDto guncelUye)
+        {
+            try
+            {
+                _uyeRepository.Patch(id, guncelUye);
+                return Ok($"{id} numaralı üye kısmen güncellendi.");
             }
             catch (System.Exception ex)
             {

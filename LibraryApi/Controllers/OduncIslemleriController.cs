@@ -1,5 +1,5 @@
 ﻿using LibraryApi.DTOs;
-using LibraryApi.Repositories;
+using LibraryApi.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryApi.Controllers
@@ -56,5 +56,21 @@ namespace LibraryApi.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [HttpGet("{id}")]
+        public IActionResult GetIslem(int id)
+        {
+            try
+            {
+                var islem = _oduncRepository.GetById(id);
+                if (islem == null) return NotFound($"{id} numaralı işlem bulunamadı.");
+                return Ok(islem);
+            }
+            catch (System.Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
     }
 }
