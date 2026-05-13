@@ -1,77 +1,299 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <title>Kitaplar - Kütüphane</title>
-    <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kitaplar — Kütüphane</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js" defer></script>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="logo">
-            <span class="logo-icon">📚</span>
-            <div>
-                <div class="logo-title">Bibliotheca</div>
-                <div class="logo-sub">Yönetim Sistemi</div>
-            </div>
-        </div>
-        <nav class="nav">
-            <a href="index.html" class="nav-item"><span class="nav-icon">◈</span> Dashboard</a>
-            <a href="books.html" class="nav-item active"><span class="nav-icon">◉</span> Kitaplar</a>
-            <a href="members.html" class="nav-item"><span class="nav-icon">◎</span> Üyeler</a>
-            <a href="loans.html" class="nav-item"><span class="nav-icon">◐</span> Ödünç İşlemleri</a>
-        </nav>
-    </aside>
 
-    <main class="main">
-        <header class="topbar">
-            <div class="page-title">Kitaplar</div>
-            <div class="topbar-right">
-                <div class="search-wrap">
-                    <input type="text" id="searchInput" placeholder="Kitap Ara..." class="search-input" />
-                </div>
-                <button class="btn-primary" onclick="openAddBook()">+ Yeni Kitap</button>
-            </div>
-        </header>
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-icon">📚</div>
+    <span class="logo-text">Kütüphane</span>
+  </a>
+  <nav>
+    <a href="index.html">Ana Sayfa</a>
+    <a href="books.html">Kitaplar</a>
+    <a href="uyeler.html">Üyeler</a>
+    <a href="odunc.html">Ödünç</a>
+  </nav>
+  <div class="header-right">
+    <button class="theme-btn" id="themeBtn" onclick="temaDegistir()" title="Temayı değiştir">🌙</button>
+  </div>
+</header>
 
-        <div class="content">
-            <div class="table-wrap">
-                <table class="data-table" id="booksTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Kitap Adı</th>
-                            <th>Yazar</th>
-                            <th>Tür</th>
-                            <th>Raf No</th>
-                            <th>İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody id="booksBody">
-                        <tr><td colspan="6" class="loading-cell">Yükleniyor...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-        <div class="modal" id="modal">
-            <div class="modal-header">
-                <div class="modal-title" id="modalTitle">...</div>
-                <button class="modal-close" onclick="closeModal()">✕</button>
-            </div>
-            <div class="modal-body" id="modalBody"></div>
-            <div class="modal-footer">
-                <button class="btn-ghost" onclick="closeModal()">İptal</button>
-                <button class="btn-primary" id="modalSaveBtn" onclick="saveBook()">Kaydet</button>
-            </div>
-        </div>
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Kitaplar</h1>
+      <p class="page-subtitle" id="subtitle">Yükleniyor…</p>
     </div>
+    <button class="btn btn-primary" onclick="openModal('addModal')">+ Kitap Ekle</button>
+  </div>
 
-    <div class="toast" id="toast"></div>
+  <div class="card">
+    <div class="card-header">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="ico">🔍</span>
+          <input type="text" id="search" placeholder="Kitap adı, yazar veya tür ara…" oninput="renderTable()" />
+        </div>
+        <select class="filter-select" id="filterTur" onchange="renderTable()">
+          <option value="">Tüm Türler</option>
+        </select>
+        <select class="filter-select" id="filterYazar" onchange="renderTable()">
+          <option value="">Tüm Yazarlar</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Kitap Adı</th>
+            <th>Yazar</th>
+            <th>Tür</th>
+            <th>Raf No</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="6"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-    <script src="js/api.js"></script>
-    <script src="js/common.js"></script>
-    <script src="js/books.js"></script>
+<!-- EKLE MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Yeni Kitap Ekle</span>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">Kitap Adı</label>
+          <input class="form-input" id="a-kitapAd" placeholder="Kitap adını girin" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">Yazar Adı</label>
+            <input class="form-input" id="a-yazarAd" placeholder="Yazar adı soyadı" list="yazarList" />
+            <datalist id="yazarList"></datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Tür</label>
+            <input class="form-input" id="a-turAd" placeholder="Örn: Roman, Bilim" list="turList" />
+            <datalist id="turList"></datalist>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Sayfa Sayısı</label>
+            <input class="form-input" id="a-sayfa" type="number" placeholder="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Basım Yılı</label>
+            <input class="form-input" id="a-basim" placeholder="2024" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Stok Adeti</label>
+            <input class="form-input" id="a-stok" type="number" value="1" min="1" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Raf No</label>
+            <input class="form-input" id="a-raf" placeholder="A1" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">İptal</button>
+      <button class="btn btn-primary" onclick="addBook()">Kitap Ekle</button>
+    </div>
+  </div>
+</div>
+
+<!-- SİL ONAY MODAL -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Kitabı Sil</span>
+      <button class="modal-close" onclick="closeModal('delModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);line-height:1.6">
+        <strong id="delName" style="color:var(--text1)"></strong> adlı kitabı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delModal')">İptal</button>
+      <button class="btn btn-danger-soft" onclick="confirmDelete()">Evet, Sil</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+let books = [];
+let pendingDeleteId = null;
+let yazarMap = {};  
+let turMap   = {};  
+
+document.addEventListener('DOMContentLoaded', load);
+
+async function load() {
+  try {
+    books = await api.getBooks();
+    buildMaps();
+    fillFilters();
+    fillDatalist();
+    renderTable();
+    document.getElementById('subtitle').textContent = `${books.length} kitap listeleniyor`;
+  } catch(e) {
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">⚠️</div><p>API'ye bağlanılamadı. Backend çalışıyor mu?</p></div></td></tr>`;
+    document.getElementById('subtitle').textContent = 'Bağlantı hatası';
+    toast('API hatası — backend açık değil', 'error');
+  }
+}
+
+function buildMaps() {
+  books.forEach(b => {
+    if (b.yazarAd && b.yazarID) yazarMap[b.yazarAd.trim().toLowerCase()] = b.yazarID;
+    if (b.turAd   && b.turID)   turMap[b.turAd.trim().toLowerCase()]     = b.turID;
+  });
+}
+
+function fillFilters() {
+  const turler  = [...new Set(books.map(b => b.turAd).filter(Boolean))].sort();
+  const yazarlar = [...new Set(books.map(b => b.yazarAd).filter(Boolean))].sort();
+
+  const ft = document.getElementById('filterTur');
+  turler.forEach(t => ft.innerHTML += `<option value="${t}">${t}</option>`);
+
+  const fy = document.getElementById('filterYazar');
+  yazarlar.forEach(y => fy.innerHTML += `<option value="${y}">${y}</option>`);
+}
+
+function fillDatalist() {
+  const turler   = [...new Set(books.map(b => b.turAd).filter(Boolean))].sort();
+  const yazarlar = [...new Set(books.map(b => b.yazarAd).filter(Boolean))].sort();
+  const tl = document.getElementById('turList');
+  const yl = document.getElementById('yazarList');
+  turler.forEach(t => { const o = document.createElement('option'); o.value = t; tl.appendChild(o); });
+  yazarlar.forEach(y => { const o = document.createElement('option'); o.value = y; yl.appendChild(o); });
+}
+
+function renderTable() {
+  const q     = document.getElementById('search').value.trim().toLowerCase();
+  const fTur  = document.getElementById('filterTur').value;
+  const fYazar= document.getElementById('filterYazar').value;
+
+  let filtered = books.filter(b => {
+    const matchQ = !q || b.kitapAd?.toLowerCase().includes(q) ||
+                        b.yazarAd?.toLowerCase().includes(q)  ||
+                        b.turAd?.toLowerCase().includes(q);
+    const matchT  = !fTur   || b.turAd  === fTur;
+    const matchY  = !fYazar || b.yazarAd === fYazar;
+    return matchQ && matchT && matchY;
+  });
+
+  const tbody = document.getElementById('tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">📭</div><p>Eşleşen kitap bulunamadı</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((b, i) => `
+    <tr>
+      <td style="color:var(--text3);width:50px">${i+1}</td>
+      <td><div class="cell-main">${b.kitapAd}</div></td>
+      <td>${b.yazarAd || '—'}</td>
+      <td><span class="badge badge-accent">${b.turAd || '—'}</span></td>
+      <td><span class="badge badge-default">${b.rafNo || '—'}</span></td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-danger-soft btn-sm" onclick="openDelete(${b.kitapID}, '${escHtml(b.kitapAd)}')">Sil</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function escHtml(s) { return s?.replace(/'/g,"&#39;") || ''; }
+
+function openDelete(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('delName').textContent = name;
+  openModal('delModal');
+}
+
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  try {
+    await api.deleteBook(pendingDeleteId);
+    toast('Kitap silindi', 'success');
+    closeModal('delModal');
+    await load();
+  } catch(e) {
+    toast('Silme işlemi başarısız', 'error');
+  }
+  pendingDeleteId = null;
+}
+
+async function addBook() {
+  const kitapAd = document.getElementById('a-kitapAd').value.trim();
+  const yazarAd = document.getElementById('a-yazarAd').value.trim();
+  const turAd   = document.getElementById('a-turAd').value.trim();
+  const sayfa   = parseInt(document.getElementById('a-sayfa').value) || 0;
+  const basim   = document.getElementById('a-basim').value.trim();
+  const stok    = parseInt(document.getElementById('a-stok').value) || 1;
+  const raf     = document.getElementById('a-raf').value.trim();
+
+  if (!kitapAd || !yazarAd || !turAd) {
+    toast('Kitap adı, yazar ve tür zorunludur', 'error'); return;
+  }
+
+  // Mevcut yazar/tür id'sini bul
+  const yazarID = yazarMap[yazarAd.toLowerCase()];
+  const turID   = turMap[turAd.toLowerCase()];
+
+  if (!yazarID) {
+    toast('Bu yazar bulunamadı. Lütfen listeden bir yazar seçin ya da önce sistemde kitabı olan bir yazar girin.', 'error');
+    return;
+  }
+  if (!turID) {
+    toast('Bu tür bulunamadı. Lütfen listeden bir tür seçin.', 'error');
+    return;
+  }
+
+  try {
+    await api.addBook({ kitapAd, yazarID, turID, sayfaSayisi: sayfa, basimYili: basim, stokAdeti: stok, rafNo: raf });
+    toast('Kitap başarıyla eklendi', 'success');
+    closeModal('addModal');
+    document.getElementById('a-kitapAd').value = '';
+    document.getElementById('a-yazarAd').value = '';
+    document.getElementById('a-turAd').value   = '';
+    document.getElementById('a-sayfa').value   = '';
+    document.getElementById('a-basim').value   = '';
+    document.getElementById('a-stok').value    = '1';
+    document.getElementById('a-raf').value     = '';
+    await load();
+  } catch(e) {
+    toast('Kitap eklenemedi — API hatası', 'error');
+  }
+}
+</script>
 </body>
 </html>

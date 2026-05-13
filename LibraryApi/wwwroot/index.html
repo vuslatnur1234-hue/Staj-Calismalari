@@ -1,56 +1,134 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8" />
-    <title>Dashboard - Kütüphane</title>
-    <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — Kütüphane</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js" defer></script>
 </head>
 <body>
-    <aside class="sidebar">
-        <div class="logo">
-            <span class="logo-icon">📚</span>
-            <div><div class="logo-title">Bibliotheca</div><div class="logo-sub">Yönetim Sistemi</div></div>
-        </div>
-        <nav class="nav">
-            <a href="index.html" class="nav-item active"><span class="nav-icon">◈</span> Dashboard</a>
-            <a href="books.html" class="nav-item"><span class="nav-icon">◉</span> Kitaplar</a>
-            <a href="members.html" class="nav-item"><span class="nav-icon">◎</span> Üyeler</a>
-            <a href="loans.html" class="nav-item"><span class="nav-icon">◐</span> Ödünç İşlemleri</a>
-        </nav>
-    </aside>
 
-    <main class="main">
-        <header class="topbar">
-            <div class="page-title">Dashboard</div>
-            <div class="topbar-right">
-            </div>
-        </header>
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-icon">📚</div>
+    <span class="logo-text">Kütüphane</span>
+  </a>
+  <nav>
+    <a href="index.html">Ana Sayfa</a>
+    <a href="books.html">Kitaplar</a>
+    <a href="uyeler.html">Üyeler</a>
+    <a href="odunc.html">Ödünç</a>
+  </nav>
+  <div class="header-right">
+    <button class="theme-btn" id="themeBtn" onclick="temaDegistir()" title="Temayı değiştir">🌙</button>
+  </div>
+</header>
 
-        <div class="content">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-icon">📖</div><div class="stat-val" id="stat-books">—</div><div class="stat-label">Toplam Kitap</div></div>
-                <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-val" id="stat-members">—</div><div class="stat-label">Toplam Üye</div></div>
-                <div class="stat-card"><div class="stat-icon">🔖</div><div class="stat-val" id="stat-loans">—</div><div class="stat-label">Aktif Ödünç</div></div>
-                <div class="stat-card"><div class="stat-icon">✓</div><div class="stat-val" id="stat-returned">—</div><div class="stat-label">Teslim Edilen</div></div>
-            </div>
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Genel Bakış</h1>
+      <p class="page-subtitle">Kütüphane yönetim paneline hoş geldiniz</p>
+    </div>
+  </div>
 
-            <div class="dash-grid">
-                <div class="panel">
-                    <div class="panel-header">Son Eklenen Kitaplar</div>
-                    <div id="recentBooks" class="mini-list">Yükleniyor...</div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header">Son Ödünç İşlemleri</div>
-                    <div id="recentLoans" class="mini-list">Yükleniyor...</div>
-                </div>
-            </div>
-        </div>
-    </main>
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="spinner" style="margin:0 0 .5rem"></div></div>
+    <div class="stat-card"><div class="spinner" style="margin:0 0 .5rem"></div></div>
+    <div class="stat-card"><div class="spinner" style="margin:0 0 .5rem"></div></div>
+    <div class="stat-card"><div class="spinner" style="margin:0 0 .5rem"></div></div>
+  </div>
 
-    <div class="toast" id="toast"></div>
+  <div class="card">
+    <div class="card-header" style="justify-content:space-between">
+      <span style="font-weight:600;color:var(--text1)">Son Ödünç İşlemleri</span>
+      <a href="odunc.html" class="btn btn-ghost btn-sm">Tümünü Gör →</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Üye</th>
+            <th>Kitap</th>
+            <th>Veriliş</th>
+            <th>Durum</th>
+          </tr>
+        </thead>
+        <tbody id="recentBody">
+          <tr><td colspan="4"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-    <script src="js/api.js"></script>
-    <script src="js/common.js"></script>
-    <script src="js/dashboard.js"></script>
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const [books, uyeler, islemler] = await Promise.all([
+      api.getBooks(), api.getUyeler(), api.getOdunc()
+    ]);
+
+    const aktif = islemler.filter(i => i.durum !== 'Teslim Edildi').length;
+    const teslim = islemler.length - aktif;
+
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card">
+        <span class="stat-icon">📖</span>
+        <div class="stat-value">${books.length}</div>
+        <div class="stat-label">Toplam Kitap</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">👥</span>
+        <div class="stat-value">${uyeler.length}</div>
+        <div class="stat-label">Kayıtlı Üye</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🔄</span>
+        <div class="stat-value">${aktif}</div>
+        <div class="stat-label">Aktif Ödünç</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">✅</span>
+        <div class="stat-value">${teslim}</div>
+        <div class="stat-label">Teslim Edilen</div>
+        <div class="stat-status">● Sistem çevrimiçi</div>
+      </div>
+    `;
+
+    const son = [...islemler].reverse().slice(0, 8);
+    const tbody = document.getElementById('recentBody');
+    if (son.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state"><div class="es-icon">📭</div><p>Henüz ödünç işlemi yok</p></div></td></tr>';
+    } else {
+      tbody.innerHTML = son.map(i => {
+        const badge = i.durum === 'Teslim Edildi'
+          ? `<span class="badge badge-success">${i.durum}</span>`
+          : `<span class="badge badge-accent">Ödünçte</span>`;
+        return `<tr>
+          <td><div class="cell-main">${i.uyeAdSoyad}</div></td>
+          <td><div class="cell-main">${i.kitapAd}</div></td>
+          <td>${formatTarih(i.verilisTarihi)}</td>
+          <td>${badge}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    toast('Veriler başarıyla yüklendi', 'success');
+  } catch (e) {
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card" style="grid-column:1/-1;text-align:center;padding:2.5rem">
+        <div class="es-icon" style="font-size:2.5rem">⚠️</div>
+        <p style="color:var(--danger);font-weight:600;margin-top:.75rem">API'ye bağlanılamadı</p>
+        <p style="color:var(--text3);font-size:.85rem;margin-top:.35rem">Backend projesinin çalıştığından ve <code>https://localhost:55142</code> adresinde erişilebilir olduğundan emin olun.</p>
+      </div>`;
+    document.getElementById('recentBody').innerHTML = '';
+    toast('Bağlantı hatası — backend açık mı?', 'error');
+  }
+});
+</script>
 </body>
 </html>

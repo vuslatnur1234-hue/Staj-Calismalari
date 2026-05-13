@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Üyeler — Kütüphane</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+ 
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-icon">📚</div>
+    <span class="logo-text">Kütüphane</span>
+  </a>
+  <nav>
+    <a href="index.html">Ana Sayfa</a>
+    <a href="books.html">Kitaplar</a>
+    <a href="uyeler.html">Üyeler</a>
+    <a href="odunc.html">Ödünç</a>
+  </nav>
+  <div class="header-right">
+    <button class="theme-btn" id="themeBtn" onclick="temaDegistir()" title="Temayı değiştir">🌙</button>
+  </div>
+</header>
+ 
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Üyeler</h1>
+      <p class="page-subtitle" id="subtitle">Yükleniyor…</p>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('addModal')">+ Üye Ekle</button>
+  </div>
+ 
+  <div class="card">
+    <div class="card-header">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="ico">🔍</span>
+          <input type="text" id="search" placeholder="Ad, soyad veya e-posta ara…" oninput="renderTable()" />
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Ad Soyad</th>
+            <th>Telefon</th>
+            <th>E-Posta</th>
+            <th>Kayıt Tarihi</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="6"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+ 
+<!-- EKLE MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Yeni Üye Ekle</span>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label required">Ad</label>
+            <input class="form-input" id="a-ad" placeholder="Ad" />
+          </div>
+          <div class="form-group">
+            <label class="form-label required">Soyad</label>
+            <input class="form-input" id="a-soyad" placeholder="Soyad" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Telefon</label>
+          <input class="form-input" id="a-telefon" placeholder="05xx xxx xx xx" type="tel" />
+        </div>
+        <div class="form-group">
+          <label class="form-label required">E-Posta</label>
+          <input class="form-input" id="a-email" placeholder="ornek@eposta.com" type="email" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">İptal</button>
+      <button class="btn btn-primary" onclick="addUye()">Üye Ekle</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- SİL ONAY MODAL -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Üyeyi Sil</span>
+      <button class="modal-close" onclick="closeModal('delModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);line-height:1.6">
+        <strong id="delName" style="color:var(--text1)"></strong> adlı üyeyi silmek istediğinize emin misiniz?
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delModal')">İptal</button>
+      <button class="btn btn-danger-soft" onclick="confirmDelete()">Evet, Sil</button>
+    </div>
+  </div>
+</div>
+ 
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+let uyeler = [];
+let pendingDeleteId = null;
+ 
+document.addEventListener('DOMContentLoaded', load);
+ 
+async function load() {
+  try {
+    uyeler = await api.getUyeler();
+    renderTable();
+    document.getElementById('subtitle').textContent = `${uyeler.length} üye kayıtlı`;
+  } catch(e) {
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">⚠️</div><p>API'ye bağlanılamadı</p></div></td></tr>`;
+    document.getElementById('subtitle').textContent = 'Bağlantı hatası';
+    toast('Bağlantı hatası', 'error');
+  }
+}
+ 
+function renderTable() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = uyeler.filter(u =>
+    !q ||
+    u.ad?.toLowerCase().includes(q) ||
+    u.soyad?.toLowerCase().includes(q) ||
+    u.email?.toLowerCase().includes(q) ||
+    u.telefon?.includes(q)
+  );
+ 
+  const tbody = document.getElementById('tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">👥</div><p>Eşleşen üye bulunamadı</p></div></td></tr>`;
+    return;
+  }
+ 
+  tbody.innerHTML = filtered.map((u, i) => `
+    <tr>
+      <td style="color:var(--text3);width:50px">${i+1}</td>
+      <td><div class="cell-main">${u.ad} ${u.soyad}</div></td>
+      <td>${u.telefon || '—'}</td>
+      <td style="color:var(--text2)">${u.email || '—'}</td>
+      <td style="color:var(--text3)">${formatTarih(u.kayitTarihi)}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="btn btn-danger-soft btn-sm" onclick="openDelete(${u.uyeID}, '${escHtml(u.ad)} ${escHtml(u.soyad)}')">Sil</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+ 
+function escHtml(s) { return s?.replace(/'/g,"&#39;") || ''; }
+ 
+function openDelete(id, name) {
+  pendingDeleteId = id;
+  document.getElementById('delName').textContent = name;
+  openModal('delModal');
+}
+ 
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  try {
+    await api.deleteUye(pendingDeleteId);
+    toast('Üye silindi', 'success');
+    closeModal('delModal');
+    await load();
+  } catch(e) {
+    toast('Silme işlemi başarısız', 'error');
+  }
+  pendingDeleteId = null;
+}
+ 
+async function addUye() {
+  const ad      = document.getElementById('a-ad').value.trim();
+  const soyad   = document.getElementById('a-soyad').value.trim();
+  const telefon = document.getElementById('a-telefon').value.trim();
+  const email   = document.getElementById('a-email').value.trim();
+ 
+  if (!ad || !soyad || !telefon || !email) {
+    toast('Tüm alanlar zorunludur', 'error'); return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    toast('Geçerli bir e-posta girin', 'error'); return;
+  }
+ 
+  try {
+    await api.addUye({ ad, soyad, telefon, email });
+    toast('Üye başarıyla eklendi', 'success');
+    closeModal('addModal');
+    document.getElementById('a-ad').value = '';
+    document.getElementById('a-soyad').value = '';
+    document.getElementById('a-telefon').value = '';
+    document.getElementById('a-email').value = '';
+    await load();
+  } catch(e) {
+    toast('Üye eklenemedi — API hatası', 'error');
+  }
+}
+</script>
+</body>
+</html>

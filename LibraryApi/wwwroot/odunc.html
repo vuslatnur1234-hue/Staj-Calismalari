@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ödünç İşlemleri — Kütüphane</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="index.html">
+    <div class="logo-icon">📚</div>
+    <span class="logo-text">Kütüphane</span>
+  </a>
+  <nav>
+    <a href="index.html">Ana Sayfa</a>
+    <a href="books.html">Kitaplar</a>
+    <a href="uyeler.html">Üyeler</a>
+    <a href="odunc.html">Ödünç</a>
+  </nav>
+  <div class="header-right">
+    <button class="theme-btn" id="themeBtn" onclick="temaDegistir()" title="Temayı değiştir">🌙</button>
+  </div>
+</header>
+
+<div class="page-wrap">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Ödünç İşlemleri</h1>
+      <p class="page-subtitle" id="subtitle">Yükleniyor…</p>
+    </div>
+    <button class="btn btn-primary" onclick="openAddModal()">+ Ödünç Ver</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="ico">🔍</span>
+          <input type="text" id="search" placeholder="Üye adı veya kitap ara…" oninput="renderTable()" />
+        </div>
+        <select class="filter-select" id="filterDurum" onchange="renderTable()">
+          <option value="">Tüm Durumlar</option>
+          <option value="aktif">Ödünçte</option>
+          <option value="teslim">Teslim Edildi</option>
+        </select>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Üye</th>
+            <th>Kitap</th>
+            <th>Veriliş</th>
+            <th>Teslim</th>
+            <th>Durum</th>
+            <th>İşlem</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="6"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ÖDÜNÇ VER MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Kitap Ödünç Ver</span>
+      <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">Üye Seçin</label>
+          <select class="form-select" id="a-uyeID">
+            <option value="">— Üye seçiniz —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label required">Kitap Seçin</label>
+          <select class="form-select" id="a-kitapID">
+            <option value="">— Kitap seçiniz —</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addModal')">İptal</button>
+      <button class="btn btn-primary" onclick="addOdunc()">Ödünç Ver</button>
+    </div>
+  </div>
+</div>
+
+<!-- TESLİM ONAY MODAL -->
+<div class="modal-overlay" id="teslimModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <span class="modal-title">Teslim Al</span>
+      <button class="modal-close" onclick="closeModal('teslimModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text2);line-height:1.6">
+        <strong id="teslimInfo" style="color:var(--text1)"></strong> kitabı teslim alındı olarak işaretlensin mi?
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('teslimModal')">İptal</button>
+      <button class="btn btn-success-soft" onclick="confirmTeslim()">Evet, Teslim Alındı</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="js/api.js"></script>
+<script>
+let islemler = [];
+let uyeler   = [];
+let books    = [];
+let pendingTeslimId = null;
+
+document.addEventListener('DOMContentLoaded', load);
+
+async function load() {
+  try {
+    [islemler, uyeler, books] = await Promise.all([
+      api.getOdunc(), api.getUyeler(), api.getBooks()
+    ]);
+    renderTable();
+    const aktif = islemler.filter(i => i.durum !== 'Teslim Edildi').length;
+    document.getElementById('subtitle').textContent =
+      `${islemler.length} işlem — ${aktif} ödünçte`;
+  } catch(e) {
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">⚠️</div><p>API'ye bağlanılamadı</p></div></td></tr>`;
+    document.getElementById('subtitle').textContent = 'Bağlantı hatası';
+    toast('Bağlantı hatası', 'error');
+  }
+}
+
+function renderTable() {
+  const q      = document.getElementById('search').value.trim().toLowerCase();
+  const fDurum = document.getElementById('filterDurum').value;
+
+  let filtered = islemler.filter(i => {
+    const matchQ = !q ||
+      i.uyeAdSoyad?.toLowerCase().includes(q) ||
+      i.kitapAd?.toLowerCase().includes(q);
+    const teslimEdildi = i.durum === 'Teslim Edildi';
+    const matchD =
+      !fDurum ||
+      (fDurum === 'aktif'  && !teslimEdildi) ||
+      (fDurum === 'teslim' &&  teslimEdildi);
+    return matchQ && matchD;
+  });
+
+  // En yeni işlemler önce
+  filtered = [...filtered].reverse();
+
+  const tbody = document.getElementById('tbody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="es-icon">📭</div><p>Eşleşen işlem bulunamadı</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(i => {
+    const teslim = i.durum === 'Teslim Edildi';
+    const badge  = teslim
+      ? `<span class="badge badge-success">Teslim Edildi</span>`
+      : `<span class="badge badge-accent">Ödünçte</span>`;
+
+    const teslimTarihi = (i.teslimTarihi && i.teslimTarihi.length > 15)
+      ? '—' : formatTarih(i.teslimTarihi);
+
+    const islemBtn = teslim
+      ? `<span class="badge badge-default" style="font-size:.75rem">Tamamlandı</span>`
+      : `<button class="btn btn-success-soft btn-sm" onclick="openTeslim(${i.islemID}, '${escHtml(i.kitapAd)}')">Teslim Al</button>`;
+
+    return `<tr>
+      <td><div class="cell-main">${i.uyeAdSoyad}</div></td>
+      <td><div class="cell-main">${i.kitapAd}</div></td>
+      <td style="color:var(--text3)">${formatTarih(i.verilisTarihi)}</td>
+      <td style="color:var(--text3)">${teslimTarihi}</td>
+      <td>${badge}</td>
+      <td><div class="actions-cell">${islemBtn}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function escHtml(s) { return s?.replace(/'/g,"&#39;") || ''; }
+
+async function openAddModal() {
+  // Seçme listelerini doldur (ad göster, id gönder)
+  const uyeSelect  = document.getElementById('a-uyeID');
+  const kitapSelect = document.getElementById('a-kitapID');
+
+  uyeSelect.innerHTML  = '<option value="">— Üye seçiniz —</option>';
+  kitapSelect.innerHTML = '<option value="">— Kitap seçiniz —</option>';
+
+  uyeler.forEach(u => {
+    uyeSelect.innerHTML += `<option value="${u.uyeID}">${u.ad} ${u.soyad}</option>`;
+  });
+  books.forEach(b => {
+    kitapSelect.innerHTML += `<option value="${b.kitapID}">${b.kitapAd} — ${b.yazarAd || ''}</option>`;
+  });
+
+  openModal('addModal');
+}
+
+function openTeslim(id, kitapAd) {
+  pendingTeslimId = id;
+  document.getElementById('teslimInfo').textContent = kitapAd;
+  openModal('teslimModal');
+}
+
+async function confirmTeslim() {
+  if (!pendingTeslimId) return;
+  try {
+    await api.teslimAl(pendingTeslimId);
+    toast('Kitap teslim alındı olarak işaretlendi', 'success');
+    closeModal('teslimModal');
+    await load();
+  } catch(e) {
+    toast('Teslim işlemi başarısız', 'error');
+  }
+  pendingTeslimId = null;
+}
+
+async function addOdunc() {
+  const uyeID  = parseInt(document.getElementById('a-uyeID').value);
+  const kitapID = parseInt(document.getElementById('a-kitapID').value);
+
+  if (!uyeID || !kitapID) {
+    toast('Üye ve kitap seçimi zorunludur', 'error'); return;
+  }
+
+  try {
+    await api.addOdunc({ uyeID, kitapID });
+    toast('Kitap ödünç verildi', 'success');
+    closeModal('addModal');
+    await load();
+  } catch(e) {
+    toast('Ödünç işlemi başarısız — API hatası', 'error');
+  }
+}
+</script>
+</body>
+</html>

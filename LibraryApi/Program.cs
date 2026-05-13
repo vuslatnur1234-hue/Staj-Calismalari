@@ -34,20 +34,24 @@ try
     builder.Services.AddHostedService<LibraryBackgroundService>();
     builder.Services.AddControllers().AddNewtonsoftJson(); 
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(); 
+    builder.Services.AddSwaggerGen();
 
     var app = builder.Build();
 
     var db = app.Services.GetRequiredService<IDBManager>();
 
-    // if (app.Environment.IsDevelopment()) 
-    // {
     app.UseSwagger();
     app.UseSwaggerUI();
-    // }
+
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+
+    app.UseRouting();
 
     app.UseCors();
+
     app.UseAuthorization();
+
     app.MapControllers();
 
     app.Run();
