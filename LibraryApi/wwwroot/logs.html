@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Sistem Logları — Kütüphane</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="js/main.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <a class="logo" href="index.html">
+            <div class="logo-icon">📚</div>
+            <span class="logo-text">Kütüphane</span>
+        </a>
+        <nav>
+            <a href="index.html">Ana Sayfa</a>
+            <a href="books.html">Kitaplar</a>
+            <a href="uyeler.html">Üyeler</a>
+            <a href="odunc.html">Ödünç</a>
+            <a href="logs.html">Sistem Logları</a>
+        </nav>
+        <div class="header-right">
+            <button class="theme-btn" id="themeBtn" onclick="temaDegistir()" title="Temayı değiştir">🌙</button>
+        </div>
+    </header>
+
+    <div class="page-wrap">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title">Sistem Logları</h1>
+                <p class="page-subtitle" id="subtitle">Yükleniyor…</p>
+            </div>
+            <button class="btn btn-danger-soft" onclick="openModal('clearModal')">🗑️ Tümünü Temizle</button>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="toolbar">
+                    <div class="search-wrap">
+                        <span class="ico">🔍</span>
+                        <input type="text" id="search" placeholder="İşlem tipi veya mesaj ara…" oninput="renderTable()" />
+                    </div>
+                    <select class="filter-select" id="filterDurum" onchange="renderTable()">
+                        <option value="">Tüm Durumlar</option>
+                        <option value="Başarılı">Başarılı</option>
+                        <option value="Hata">Hata</option>
+                        <option value="Bilgi">Bilgi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tarih / Zaman</th>
+                            <th>Durum</th>
+                            <th>İşlem Tipi</th>
+                            <th style="width: 45%;">Mesaj</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                        <tr><td colspan="4"><div class="spinner"></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SİL ONAY MODAL -->
+    <div class="modal-overlay" id="clearModal">
+        <div class="modal" style="max-width:420px">
+            <div class="modal-header">
+                <span class="modal-title">Logları Temizle</span>
+                <button class="modal-close" onclick="closeModal('clearModal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <p style="color:var(--text2);line-height:1.6">
+                    Sistemdeki <strong style="color:var(--danger)">tüm işlem geçmişi</strong> silinecektir. Bu işlem geri alınamaz. Onaylıyor musunuz?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('clearModal')">İptal</button>
+                <button class="btn btn-danger-soft" onclick="confirmClear()">Evet, Tümünü Sil</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="js/api.js"></script>
+    <script>
+        let logs = [];
+
+        document.addEventListener('DOMContentLoaded', load);
+
+        async function load() {
+            try {
+                logs = await api.getLogs();
+                renderTable();
+                document.getElementById('subtitle').textContent = `Toplam ${logs.length} işlem kaydı bulundu`;
+            } catch (e) {
+                document.getElementById('tbody').innerHTML =
+                    `<tr><td colspan="4"><div class="empty-state"><div class="es-icon">⚠️</div><p>API'ye bağlanılamadı</p></div></td></tr>`;
+                document.getElementById('subtitle').textContent = 'Bağlantı hatası';
+                toast('Loglar yüklenemedi', 'error');
+            }
+        }
+
+        function renderTable() {
+            const q = document.getElementById('search').value.trim().toLowerCase();
+            const fDurum = document.getElementById('filterDurum').value;
+
+            const filtered = logs.filter(l => {
+                const matchQ = !q ||
+                    l.mesaj?.toLowerCase().includes(q) ||
+                    l.islemTipi?.toLowerCase().includes(q);
+                const matchD = !fDurum || l.durum === fDurum;
+                return matchQ && matchD;
+            });
+
+            const tbody = document.getElementById('tbody');
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state"><div class="es-icon">📭</div><p>Eşleşen log bulunamadı</p></div></td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(l => {
+                // Duruma göre badge rengi belirleme
+                let badgeClass = 'badge-default';
+                if (l.durum === 'Başarılı' || l.durum?.toLowerCase() === 'success') badgeClass = 'badge-success';
+                else if (l.durum === 'Hata' || l.durum?.toLowerCase() === 'error') badgeClass = 'badge-danger';
+                else if (l.durum === 'Bilgi' || l.durum?.toLowerCase() === 'info') badgeClass = 'badge-accent';
+
+                return `
+          <tr>
+            <td style="color:var(--text3); font-variant-numeric: tabular-nums;">
+              ${formatDateTime(l.tarihZaman)}
+            </td>
+            <td><span class="badge ${badgeClass}">${l.durum || 'Bilinmiyor'}</span></td>
+            <td><div class="cell-main">${l.islemTipi || '—'}</div></td>
+            <td style="color:var(--text2); line-height: 1.4;">${l.mesaj || '—'}</td>
+          </tr>
+        `;
+            }).join('');
+        }
+
+        function formatDateTime(str) {
+            if (!str) return '—';
+            // Tarih ve saati daha okunaklı formata ayır (Örn: 2024-05-12 14:30:00)
+            try {
+                const d = new Date(str);
+                if (isNaN(d.getTime())) return str;
+
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+
+                return `${day}.${month}.${year} <span style="opacity:0.6; margin-left:6px">${hours}:${minutes}</span>`;
+            } catch {
+                return str;
+            }
+        }
+
+        async function confirmClear() {
+            try {
+                await api.clearLogs();
+                toast('Tüm loglar başarıyla silindi', 'success');
+                closeModal('clearModal');
+                await load(); // Tabloyu sıfırla
+            } catch (e) {
+                toast('Silme işlemi başarısız', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
